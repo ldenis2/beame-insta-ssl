@@ -13,9 +13,9 @@ Step 1: Sign up super-fast [here!](https://ypxf72akb6onjvrq.ohkv8odznwh5jpwm.v1.
 
 (if you use Windows, see [Windows System Requirements](#Windows System Requirements) below before Step 2)
 
-Step 2 for Mac/Linux: Run `sudo npm install -g beame-insta-ssl` (**please make sure you are using NodeJS version 6.9.X**). Depending on your configuration you might want to run `npm install -g beame-insta-ssl` instead (if you are using [`n`](https://github.com/tj/n) or other methods for creating per-user NodejS installations).
+Step 2 for Mac/Linux: Run `sudo npm install -g beame-insta-ssl` (**please make sure you are using NodeJS version 6.9.X or newer**). Depending on your configuration you might want to run `npm install -g beame-insta-ssl` instead (if you are using [`n`](https://github.com/tj/n) or other methods for creating per-user NodejS installations).
 
-Step 2 for Windows: Run `npm install -g beame-insta-ssl` (**please make sure you are using NodeJS version 6.9.X**).
+Step 2 for Windows: Run `npm install -g beame-insta-ssl` (**please make sure you are using NodeJS version 6.9.X or newer**).
 
 Step 3: Run the command in the sign up confirmation email you just got from us. beame-insta-ssl will obtain your very own beame hostname, and issue a valid public certificate for it.
 
@@ -102,7 +102,7 @@ Right now we are not limiting it, but might if we get unreasonable usage.
 
 Yes. If you use it for phishing we will blacklist it and revoke corresponding cert.
 
-# Commands for using beame-insta-ssl:
+## Commands for using beame-insta-ssl:
 
 Step 1: [Sign up here, humans only,](https://ypxf72akb6onjvrq.ohkv8odznwh5jpwm.v1.p.beameio.net/insta-ssl) and receive your personal token by email (make sure you use an email you can access). 
 
@@ -114,7 +114,7 @@ The certificate will be ready in moments and you can start using your tunnel rig
 
 Sample command for bringing up a tunnel:
 
-	beame-insta-ssl tunnel 8008 http
+	beame-insta-ssl tunnel make --dst 8008 --proto http
 
 Use the command above if you want to have a secure connection, but don't want to install certificates into your own server. You will receive the following output:
 
@@ -124,10 +124,36 @@ Just run your server on desired port (_8008_ in the above example) and point any
 
 You can also specify particular Beame hostname to run a tunnel to, in case, for example, when you have more than one set of Beame credentials:
 
-	beame-insta-ssl tunnel 8008 http --fqdn qwertyuio.asdfghjkl.v1.d.beameio.net
+	beame-insta-ssl tunnel make --dst 8008 --proto http --fqdn qwertyuio.asdfghjkl.v1.d.beameio.net
 
 ## Where is my Beame data stored?
 Credentials created by you are stored on your machine in `$HOME/.beame` folder. You can easily export them to the desired location, by using the `export` command that looks like this:
 
-	beame-insta-ssl export qwertyuio.asdfghjkl.v1.d.beameio.net ./destination_folder_path
+	beame-insta-ssl creds exportCred --fqdn qwertyuio.asdfghjkl.v1.d.beameio.net ./destination_folder_path
 
+## Advanced: TCP over TLS tunnel using beame-insta-ssl
+
+Here are the commands that you can run to make a generic TCP tunnel over TLS tunnel provided by Beame.io . This example shows specific case of exposing SSH port. Tested on Linux with socat version 1.7.3.1, make sure your socat version is recent enough to support TLS1.2
+
+### How it works
+
+Establish tunnel using beame-insta-ssl "tunnel" command:
+
+                Beame.io infrastructure <--- ssh server
+
+Connect using tunnel, traffic between Beame.io infrastructure and ssh server flows inside the established tunnel, incoming firewall rules near SSH server do not apply.
+
+    client ---> Beame.io infrastructure ---> ssh server
+
+
+### Client side
+
+    FQDN=something.beameio.net
+    while true;do date;socat tcp-listen:50001,reuseaddr exec:"openssl s_client -host $FQDN -port 443 -servername $FQDN -quiet";done &
+    ssh -p 50001 127.0.0.1
+
+### Server side (where beame-insta-ssl is installed)
+
+    FQDN=something.beameio.net
+    ./main.js tunnel make --dst 50000 --proto https --fqdn $FQDN &
+    while true;do date;socat openssl-listen:50000,reuseaddr,cert=$HOME/.beame/v2/$FQDN/p7b.cer,key=$HOME/.beame/v2/$FQDN/private_key.pem,method=TLS1.2,verify=0 TCP4:127.0.0.1:22;done
