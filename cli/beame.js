@@ -68,6 +68,7 @@ const parametersSchema = {
 	'token':              {required: true, base64: true, json: true},
 	'value':              {required: false},
 	'useBestProxy':       {required: false},
+	'validityPeriod':     {required: false}
 };
 
 function InvalidArgv(message) {
@@ -138,15 +139,10 @@ function main() {
 	}
 
 	// getHelpMessage() is only defined in this file.
-	commands.creds.create.toText = (metadata) => `Certificate created! Certificate FQDN is ${metadata.fqdn}\n\n` + getHelpMessage('certificate-created.txt');
+	commands.creds.getCreds.toText = (metadata) => `Certificate created! Certificate FQDN is ${metadata.fqdn}\n\n` + getHelpMessage('certificate-created.txt');
 
 	// Old CLI compatibility - start
 	let do_warn = false, orig_command = argv._[0];
-	if (argv._[0] == 'create') {
-		do_warn = true;
-		argv.token = argv._[1];
-		argv._ = ['creds', 'create'];
-	}
 	if (argv._[0] == 'list') {
 		do_warn = true;
 		argv._ = ['creds', 'list'];
@@ -184,7 +180,7 @@ function main() {
 	subCmdName = argv._[1];
 	cmd        = commands[cmdName];
 
-	if (`${cmdName} ${subCmdName}` != 'creds create') {
+	if (`${cmdName} ${subCmdName}` != 'creds getCreds') {
 		let credsCount = require('./creds').list().length;
 
 		if (!credsCount) {
