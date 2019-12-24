@@ -32,7 +32,7 @@
   },
   "homepage": "https://github.com/beameio/beame-insta-ssl#readme",
   "dependencies": {
-    "github:ldenis2/beame-sdk": "2.0.57",
+    "beame-sdk": "2.0.57@github:ldenis2/beame-sdk",
     "cli-table2": "^0.2.0",
     "http-proxy": "^1.15.1",
     "minimist": "^1.2.0",
